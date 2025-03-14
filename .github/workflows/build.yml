@@ -14,23 +14,25 @@ jobs:
       PYVERSION: ${{ steps.get_python_version.outputs.PYVERSION }}
     steps:
       - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          path: pyodide_0273
+
+      - uses: actions/checkout@v4
         name: Read the Python version from Makefile.envs
         id: get_python_version
         with:
           repository: pyodide/pyodide
           ref: refs/tags/${{ env.PYODIDE_VERSION }}
+          path: pyodide
           run: |
             echo "PYVERSION=$(git grep 'export PYVERSION ?=' Makefile.envs | cut -d' ' -f4)"  >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
-        name: Checkout
-        with:
-          path: pyodide_0273
-          run: |
-            cp -r packages/* ../packages
+            cp -r ../packages/* ./packages
             echo "===ls ./ =="
             ls ./
             echo "===ls ../ =="
             ls ../
+
   build-core:
     strategy:
       fail-fast: false
