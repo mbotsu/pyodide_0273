@@ -22,6 +22,7 @@ jobs:
         name: Checkout Pyodide
         with:
           repository: pyodide/pyodide
+          submodules: recursive
           ref: refs/tags/${{ env.PYODIDE_VERSION }}
           path: pyodide
       
@@ -31,10 +32,6 @@ jobs:
         run: |
           echo "PYVERSION=$(git grep 'export PYVERSION ?=' Makefile.envs | cut -d' ' -f4)"  >> "$GITHUB_OUTPUT"
           cp -r ../pyodide_0273/packages/* ./packages
-          echo "===ls ./ =="
-          ls ./
-          echo "===ls ../ =="
-          ls ../
 
   build-core:
     strategy:
@@ -46,9 +43,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Cache ccache output
         uses: actions/cache@v4
         with:
@@ -58,9 +52,8 @@ jobs:
 
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          working-directory: pyodide
           activate-environment: pyodide-env
-          environment-file: environment.yml
+          environment-file: pyodide/environment.yml
           channels: conda-forge
 
       - name: Check Versions
