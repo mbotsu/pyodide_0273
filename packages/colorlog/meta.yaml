@@ -1,0 +1,13 @@
+package:
+  name: colorlog
+  version: 6.9.0
+  top-level:
+    - colorlog
+source:
+  url: https://files.pythonhosted.org/packages/py3/c/colorlog/colorlog-6.9.0-py3-none-any.whl
+  sha256: 5906e71acd67cb07a71e779c47c4bcb45fb8c2993eebe9e5adcd6a6f1b283eff
+about:
+  home: https://github.com/borntyping/python-colorlog
+  PyPI: https://pypi.org/project/colorlog
+  summary: Add colours to the output of Python's logging module.
+  license: MIT License

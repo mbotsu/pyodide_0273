@@ -1,0 +1,130 @@
+name: Pyodide Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  PYODIDE_VERSION: '0.27.3'
+
+jobs:
+  get_python_version:
+    runs-on: ubuntu-latest
+    outputs:
+      PYVERSION: ${{ steps.get_python_version.outputs.PYVERSION }}
+    steps:
+      - uses: actions/checkout@v4
+        name: Read the Python version from Makefile.envs
+        id: get_python_version
+        with:
+          repository: pyodide/pyodide
+          ref: refs/tags/${{ env.PYODIDE_VERSION }}
+          run: |
+            echo "PYVERSION=$(git grep 'export PYVERSION ?=' Makefile.envs | cut -d' ' -f4)"  >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        name: Checkout
+        with:
+          path: pyodide_0273
+          run: |
+            cp -r packages/* ../packages
+            echo "===ls ./ =="
+            ls ./
+            echo "===ls ../ =="
+            ls ../
+  build-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm,numba"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Cache ccache output
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/ccache
+          key: ${{ hashFiles('Makefile.envs') }}-${{ runner.os }}-v20211025-
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: pyodide-env
+          environment-file: environment.yml
+          channels: conda-forge
+
+      - name: Check Versions
+        shell: bash -l {0}
+        run: |
+          python --version
+          node --version
+          npm --version
+          which python
+          which node
+          which npm
+
+      - name: Install dependencies (ubuntu)
+        shell: bash -l {0}
+        if: ${{ contains(runner.os, 'ubuntu') }}
+        run: |
+          sudo apt install -y build-essential git xxd
+
+      - name: Install dependencies (macos)
+        shell: bash -l {0}
+        if: ${{ contains(runner.os, 'macos') }}
+        run: |
+          brew install coreutils
+
+      - name: Install dependencies (Python)
+        shell: bash -l {0}
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build emsdk
+        shell: bash -l {0}
+        run: |
+          which ccache
+
+          ccache -z
+          make -C emsdk
+          ccache -s
+
+      - name: Build Cpython
+        shell: bash -l {0}
+        run: |
+          # This is necessary to use the ccache from emsdk
+          source pyodide_env.sh
+
+          which ccache
+
+          ccache -z
+          make -C cpython
+          ccache -s
+
+      - name: build Pyodide with packages ${{ matrix.pyodide_packages }}
+        shell: bash -l {0}
+        run: |
+          # This is necessary to use the ccache from emsdk
+          source pyodide_env.sh
+          ccache -z
+          PYODIDE_PACKAGES=${{ matrix.pyodide_packages }} make
+          ccache -s
+
+      - name: check-size
+        shell: bash -l {0}
+        run: |
+          ls -lh dist/
+
+          pip install brotli
+          ./tools/check_compressed_size.py dist/pyodide.asm.* dist/python_stdlib*
+
+      - name: Store artifacts build
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-build-${{ runner.os }}
+          path: ./dist/
+          retention-days: 60

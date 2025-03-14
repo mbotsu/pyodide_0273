@@ -1,0 +1,13 @@
+package:
+  name: slicer
+  version: 0.0.7
+  top-level:
+    - slicer
+source:
+  url: https://files.pythonhosted.org/packages/py3/s/slicer/slicer-0.0.7-py3-none-any.whl
+  sha256: 0b94faa5251c0f23782c03f7b7eedda91d80144059645f452c4bc80fab875976
+about:
+  home: https://github.com/interpretml/slicer
+  PyPI: https://pypi.org/project/slicer
+  summary: A small package for big slicing.
+  license: ""

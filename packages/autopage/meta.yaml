@@ -1,0 +1,13 @@
+package:
+  name: autopage
+  version: 0.5.0
+  top-level:
+    - autopage
+source:
+  url: https://files.pythonhosted.org/packages/py3/a/autopage/autopage-0.5.0-py3-none-any.whl
+  sha256: 57232860f28a1867cdd54b5ea510e292c53d6dfb613f781c5120200666550b06
+about:
+  home: https://github.com/zaneb/autopage
+  PyPI: https://pypi.org/project/autopage
+  summary: A library to provide automatic paging for console output
+  license: ""
