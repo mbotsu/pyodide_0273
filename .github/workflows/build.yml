@@ -19,8 +19,7 @@ jobs:
           path: pyodide_0273
 
       - uses: actions/checkout@v4
-        name: Chekout Pyodide
-        
+        name: Checkout Pyodide
         with:
           repository: pyodide/pyodide
           ref: refs/tags/${{ env.PYODIDE_VERSION }}
@@ -31,12 +30,12 @@ jobs:
         working-directory: pyodide
         run: |
           echo "PYVERSION=$(git grep 'export PYVERSION ?=' Makefile.envs | cut -d' ' -f4)"  >> "$GITHUB_OUTPUT"
-          cp -r ../packages/* ./packages
+          cp -r ../pyodide_0273/packages/* ./packages
           echo "===ls ./ =="
           ls ./
           echo "===ls ../ =="
           ls ../
-          
+
   build-core:
     strategy:
       fail-fast: false
