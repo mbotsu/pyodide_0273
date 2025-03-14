@@ -6,9 +6,16 @@ on:
 
 env:
   PYODIDE_VERSION: '0.27.3'
+  FORCE_COLOR: 3
 
 jobs:
-  get_python_version:
+  build-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm,numba"
     runs-on: ubuntu-latest
     outputs:
       PYVERSION: ${{ steps.get_python_version.outputs.PYVERSION }}
@@ -33,16 +40,6 @@ jobs:
           echo "PYVERSION=$(git grep 'export PYVERSION ?=' Makefile.envs | cut -d' ' -f4)"  >> "$GITHUB_OUTPUT"
           cp -r ../pyodide_0273/packages/* ./packages
 
-  build-core:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm,numba"
-    runs-on: ${{ matrix.os }}
-
-    steps:
       - name: Cache ccache output
         uses: actions/cache@v4
         with:
