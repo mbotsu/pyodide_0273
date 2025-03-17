@@ -123,3 +123,9 @@ jobs:
           name: core-build-${{ runner.os }}
           path: ./pyodide/dist/
           retention-days: 60
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./pyodide/dist/core-build-${{ runner.os }}
+          tag_name: pyodide_${{ env.PYODIDE_VERSION }}
