@@ -17,6 +17,8 @@ jobs:
           - os: ubuntu-latest
             pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm,numba"
     runs-on: ubuntu-latest
+    permissions: 
+      contents: write
     outputs:
       PYVERSION: ${{ steps.get_python_version.outputs.PYVERSION }}
     steps:
@@ -129,8 +131,6 @@ jobs:
         run: |
           mv dist pyodide
           tar czf pyodide.tar.gz pyodide
-          ls ./
-          pwd
 
       - name: Release
         uses: softprops/action-gh-release@v1
