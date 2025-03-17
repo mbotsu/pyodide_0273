@@ -129,6 +129,8 @@ jobs:
         run: |
           mv dist pyodide
           tar czf pyodide.tar.gz pyodide
+          ls ./
+          pwd
 
       - name: Release
         uses: softprops/action-gh-release@v1
