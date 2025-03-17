@@ -127,5 +127,5 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./pyodide/dist/core-build-${{ runner.os }}
+          files: ./pyodide/dist/core-build-${{ runner.os }}.zip
           tag_name: pyodide_${{ env.PYODIDE_VERSION }}
