@@ -124,8 +124,14 @@ jobs:
           path: ./pyodide/dist/
           retention-days: 60
 
+      - name: Zip artifact
+        working-directory: pyodide
+        run: |
+          mv dist pyodide
+          tar czf pyodide.tar.gz pyodide
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./pyodide/dist/core-build-${{ runner.os }}.zip
+          files: ./pyodide/pyodide.tar.gz
           tag_name: pyodide_${{ env.PYODIDE_VERSION }}
