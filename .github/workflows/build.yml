@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 env:
-  PYODIDE_VERSION: '0.22.1'
+  PYODIDE_VERSION: '0.24.1'
   FORCE_COLOR: 3
 
 jobs:
@@ -48,11 +48,11 @@ jobs:
           path: |
             /tmp/ccache
           key: ${{ hashFiles('Makefile.envs') }}-${{ runner.os }}-v20211025-
-      
+
       - uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: pyodide-env
-          python-version: 3.10.2
+          environment-file: pyodide/environment.yml
           channels: conda-forge
 
       - name: Check Versions
@@ -65,14 +65,18 @@ jobs:
           which node
           which npm
 
-      - name: Install dependencies
+      - name: Install dependencies (ubuntu)
+        shell: bash -l {0}
+        if: ${{ contains(runner.os, 'ubuntu') }}
+        run: |
+          sudo apt install -y build-essential git xxd
+
+      - name: Install dependencies (Python)
         working-directory: pyodide
         shell: bash -l {0}
         run: |
-          sudo apt install -y build-essential git
-          conda install -y nodejs ccache f2c pkg-config swig make patch pkg-config texinfo autoconf automake libtool
           pip install -r requirements.txt
-          
+
       - name: Build emsdk
         working-directory: pyodide
         shell: bash -l {0}
