@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 env:
-  PYODIDE_VERSION: '0.27.3'
+  PYODIDE_VERSION: '0.22.1'
   FORCE_COLOR: 3
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm,numba"
+            pyodide_packages: "min-scipy-stack,colorlog,slicer,tqdm,sqlalchemy,shap,cloudpickle,statsmodels,lightgbm"
     runs-on: ubuntu-latest
     permissions: 
       contents: write

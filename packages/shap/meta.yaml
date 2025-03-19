@@ -1,15 +1,15 @@
 package:
   name: shap
-  version: 0.47.0
+  version: 0.41.0
   top-level:
     - shap
 source:
-  url: https://files.pythonhosted.org/packages/source/s/shap/shap-0.47.0.tar.gz
-  sha256: e1f78d885bf4ac388b0030c8ecc35529411650b78d6caa814e2a6e281f7ab395
+  url: https://files.pythonhosted.org/packages/ed/bb/b48bb3fe1b47e7673b037ed9627746eb1bf9f3ee5b45289f5ab6a26089ef/shap-0.41.0.tar.gz
+  sha256: a49ea4d65aadbc845a695fa3d7ea0bdfc8c928b8e213b0feedf5868ade4b3ca5
   patches:
-    - patches/not_numbatype.patch
+    - patches/notnumba.patch
 about:
-  home: null
+  home: http://github.com/slundberg/shap
   PyPI: https://pypi.org/project/shap
   summary: A unified approach to explain the output of any machine learning model.
-  license: MIT License
+  license: MIT

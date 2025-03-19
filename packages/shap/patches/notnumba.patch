@@ -1,0 +1,239 @@
+diff --git a/setup.py b/setup.py
+index 5e28f76..ad65c1b 100644
+--- a/setup.py
++++ b/setup.py
+@@ -226,7 +226,7 @@ def run_setup(with_binary, test_xgboost, test_lightgbm, test_catboost, test_spar
+         cmdclass={'build_ext': build_ext},
+         setup_requires=['numpy'],
+         install_requires=['numpy', 'scipy', 'scikit-learn', 'pandas', 'tqdm>4.25.0',
+-                          'packaging>20.9', 'slicer==0.0.7', 'numba', 'cloudpickle'],
++                          'packaging>20.9', 'slicer==0.0.7', 'cloudpickle'],
+         extras_require=extras_require,
+         ext_modules=ext_modules,
+         classifiers=[
+diff --git a/shap/explainers/_exact.py b/shap/explainers/_exact.py
+index 4514e41..f544bdd 100644
+--- a/shap/explainers/_exact.py
++++ b/shap/explainers/_exact.py
+@@ -1,6 +1,5 @@
+ import logging
+ import numpy as np
+-from numba import jit
+ from .. import links
+ from ..models import Model
+ from ..utils import MaskedModel, shapley_coefficients, make_masks, delta_minimization_order
+@@ -175,7 +174,6 @@ class Exact(Explainer):
+             "clustering": getattr(self.masker, "clustering", None)
+         }
+ 
+-@jit
+ def _compute_grey_code_row_values(row_values, mask, inds, outputs, shapley_coeff, extended_delta_indexes, noop_code):
+     set_size = 0
+     M = len(inds)
+@@ -201,7 +199,6 @@ def _compute_grey_code_row_values(row_values, mask, inds, outputs, shapley_coeff
+             else:
+                 row_values[j] -= out * off_coeff
+ 
+-@jit
+ def _compute_grey_code_row_values_st(row_values, mask, inds, outputs, shapley_coeff, extended_delta_indexes, noop_code):
+     set_size = 0
+     M = len(inds)
+diff --git a/shap/explainers/_partition.py b/shap/explainers/_partition.py
+index 6a2b923..a96db6f 100644
+--- a/shap/explainers/_partition.py
++++ b/shap/explainers/_partition.py
+@@ -16,7 +16,6 @@ import cloudpickle
+ import pickle
+ from ..maskers import Masker
+ from ..models import Model
+-from numba import jit
+ 
+ # .shape[0] messes up pylint a lot here
+ # pylint: disable=unsubscriptable-object
+@@ -672,7 +671,6 @@ def output_indexes_len(output_indexes):
+     elif not isinstance(output_indexes, str):
+         return len(output_indexes)
+ 
+-@jit
+ def lower_credit(i, value, M, values, clustering):
+     if i < M:
+         values[i] += value
+diff --git a/shap/links.py b/shap/links.py
+index 4865967..6b70902 100644
+--- a/shap/links.py
++++ b/shap/links.py
+@@ -1,22 +1,17 @@
+ import numpy as np
+-import numba
+ 
+-@numba.jit
+ def identity(x):
+     """ A no-op link function.
+     """
+     return x
+-@numba.jit
+ def _identity_inverse(x):
+     return x
+ identity.inverse = _identity_inverse
+ 
+-@numba.jit
+ def logit(x):
+     """ A logit link function useful for going from probability units to log-odds units.
+     """
+     return np.log(x/(1-x))
+-@numba.jit
+ def _logit_inverse(x):
+     return 1/(1+np.exp(-x))
+ logit.inverse = _logit_inverse
+diff --git a/shap/maskers/_image.py b/shap/maskers/_image.py
+index 93aa753..b22f93e 100644
+--- a/shap/maskers/_image.py
++++ b/shap/maskers/_image.py
+@@ -4,16 +4,14 @@ from ..utils._exceptions import DimensionError
+ from ._masker import Masker
+ from .._serializable import Serializer, Deserializer
+ import heapq
+-from numba import jit
+ try:
+     import torch
+ except ImportError as e:
+     record_import_error("torch", "torch could not be imported!", e)
+ 
+ # TODO: heapq in numba does not yet support Typed Lists so we can move to them yet...
+-from numba.core.errors import NumbaPendingDeprecationWarning
+ import warnings
+-warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
++warnings.simplefilter('ignore', category=Warning)
+ 
+ try:
+     import cv2
+@@ -171,7 +169,6 @@ class Image(Masker):
+             kwargs["shape"] = s.load("shape")
+         return kwargs
+ 
+-@jit
+ def _jit_build_partition_tree(xmin, xmax, ymin, ymax, zmin, zmax, total_ywidth, total_zwidth, M, clustering, q):
+     """ This partitions an image into a herarchical clustering based on axis-aligned splits.
+     """
+diff --git a/shap/maskers/_tabular.py b/shap/maskers/_tabular.py
+index 92ec6e3..25337a4 100644
+--- a/shap/maskers/_tabular.py
++++ b/shap/maskers/_tabular.py
+@@ -1,7 +1,6 @@
+ import logging
+ import pandas as pd
+ import numpy as np
+-from numba import jit
+ from .. import utils
+ from ..utils import safe_isinstance, MaskedModel
+ from ..utils._exceptions import DimensionError, InvalidClusteringError
+@@ -182,7 +181,6 @@ class Tabular(Masker):
+             kwargs["clustering"] = s.load("clustering")
+         return kwargs
+ 
+-@jit
+ def _single_delta_mask(dind, masked_inputs, last_mask, data, x, noop_code):
+     if dind == noop_code:
+         pass
+@@ -193,7 +191,6 @@ def _single_delta_mask(dind, masked_inputs, last_mask, data, x, noop_code):
+         masked_inputs[:, dind] = x[dind]
+         last_mask[dind] = True
+ 
+-@jit
+ def _delta_masking(masks, x, curr_delta_inds, varying_rows_out,
+                    masked_inputs_tmp, last_mask, data, variants, masked_inputs_out, noop_code):
+     """ Implements the special (high speed) delta masking API that only flips the positions we need to.
+diff --git a/shap/utils/_clustering.py b/shap/utils/_clustering.py
+index 1182042..cfc676a 100644
+--- a/shap/utils/_clustering.py
++++ b/shap/utils/_clustering.py
+@@ -1,7 +1,6 @@
+ import numpy as np
+ import scipy as sp
+ from scipy.spatial.distance import pdist
+-from numba import jit
+ import sklearn
+ import warnings
+ from ._general import safe_isinstance
+@@ -31,7 +30,6 @@ def partition_tree_shuffle(indexes, index_mask, partition_tree):
+     M = len(index_mask)
+     #switch = np.random.randn(M) < 0
+     _pt_shuffle_rec(partition_tree.shape[0]-1, indexes, index_mask, partition_tree, M, 0)
+-@jit
+ def _pt_shuffle_rec(i, indexes, index_mask, partition_tree, M, pos):
+     if i < 0:
+         # see if we should include this index in the ordering
+@@ -50,7 +48,6 @@ def _pt_shuffle_rec(i, indexes, index_mask, partition_tree, M, pos):
+         pos = _pt_shuffle_rec(left, indexes, index_mask, partition_tree, M, pos)
+     return pos
+ 
+-@jit
+ def delta_minimization_order(all_masks, max_swap_size=100, num_passes=2):
+     order = np.arange(len(all_masks))
+     for _ in range(num_passes):
+@@ -59,13 +56,11 @@ def delta_minimization_order(all_masks, max_swap_size=100, num_passes=2):
+                 if _reverse_window_score_gain(all_masks, order, i, length) > 0:
+                     _reverse_window(order, i, length)
+     return order
+-@jit
+ def _reverse_window(order, start, length):
+     for i in range(length // 2):
+         tmp = order[start + i]
+         order[start + i] = order[start + length - i - 1]
+         order[start + length - i - 1] = tmp
+-@jit
+ def _reverse_window_score_gain(masks, order, start, length):
+     forward_score = _mask_delta_score(masks[order[start - 1]], masks[order[start]]) + \
+                     _mask_delta_score(masks[order[start + length-1]], masks[order[start + length]])
+@@ -73,7 +68,6 @@ def _reverse_window_score_gain(masks, order, start, length):
+                     _mask_delta_score(masks[order[start]], masks[order[start + length]])
+     
+     return forward_score - reverse_score
+-@jit
+ def _mask_delta_score(m1, m2):
+     return (m1 ^ m2).sum()
+ 
+diff --git a/shap/utils/_masked_model.py b/shap/utils/_masked_model.py
+index d665dc5..c052891 100644
+--- a/shap/utils/_masked_model.py
++++ b/shap/utils/_masked_model.py
+@@ -1,7 +1,6 @@
+ import copy
+ import numpy as np
+ import scipy.sparse
+-from numba import jit
+ from .. import links
+ 
+ 
+@@ -359,7 +358,6 @@ def _build_fixed_output(averaged_outs, last_outs, outputs, batch_positions, vary
+     else:
+         _build_fixed_multi_output(averaged_outs, last_outs, outputs, batch_positions, varying_rows, num_varying_rows, link, linearizing_weights)
+ 
+-@jit # we can't use this when using a custom link function...
+ def _build_fixed_single_output(averaged_outs, last_outs, outputs, batch_positions, varying_rows, num_varying_rows, link, linearizing_weights):
+     # here we can assume that the outputs will always be the same size, and we need
+     # to carry over evaluation outputs
+@@ -381,7 +379,6 @@ def _build_fixed_single_output(averaged_outs, last_outs, outputs, batch_position
+         else:
+             averaged_outs[i] = averaged_outs[i-1]
+ 
+-@jit
+ def _build_fixed_multi_output(averaged_outs, last_outs, outputs, batch_positions, varying_rows, num_varying_rows, link, linearizing_weights):
+     # here we can assume that the outputs will always be the same size, and we need
+     # to carry over evaluation outputs
+@@ -424,7 +421,6 @@ def make_masks(cluster_matrix):
+ 
+     return mask_matrix
+ 
+-@jit
+ def _init_masks(cluster_matrix, M, indices_row_pos, indptr):
+     pos = 0
+     for i in range(2 * M - 1):
+@@ -435,7 +431,6 @@ def _init_masks(cluster_matrix, M, indices_row_pos, indptr):
+         indptr[i+1] = pos
+         indices_row_pos[i] = indptr[i]
+ 
+-@jit
+ def _rec_fill_masks(cluster_matrix, indices_row_pos, indptr, indices, M, ind):
+     pos = indices_row_pos[ind]
+ 
