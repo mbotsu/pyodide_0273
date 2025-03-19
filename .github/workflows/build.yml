@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 env:
-  PYODIDE_VERSION: '0.24.1'
+  PYODIDE_VERSION: '0.27.3'
   FORCE_COLOR: 3
 
 jobs:
@@ -136,4 +136,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ./pyodide/pyodide.tar.gz
-          tag_name: pyodide_${{ env.PYODIDE_VERSION }}
+          tag_name: pyodide_shap041_${{ env.PYODIDE_VERSION }}
